@@ -1,11 +1,27 @@
 import streamlit as st
 from googleapiclient.discovery import build
 import pandas as pd
+import yt_dlp
 
 st.set_page_config(page_title="Youtuber Analysis", page_icon="📊", layout="wide")
 
+# API 키 불러오기
 api_key = st.secrets["YOUTUBE_API_KEY"]
 youtube = build('youtube', 'v3', developerKey=api_key)
+
+# 유튜브 실제 스트리밍 MP4 주소를 추출하는 함수
+def get_raw_video_url(youtube_url):
+    ydl_opts = {
+        'format': 'best[ext=mp4]/best',  # MP4 포맷 중 가장 좋은 화질
+        'quiet': True,
+        'no_warnings': True
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        try:
+            info = ydl.extract_info(youtube_url, download=False)
+            return info['url']  # 실제 미디어 소스 URL 리턴
+        except Exception as e:
+            return None
 
 st.title("📊 유튜버 채널 영상 분석")
 
@@ -51,7 +67,6 @@ if channel_name:
             snippet = item['snippet']
             stats = item['statistics']
             
-            # 일부 영상은 좋아요나 댓글이 비공개일 수 있으므로 예외 처리
             video_data.append({
                 "Title": snippet['title'],
                 "Link": f"https://www.youtube.com/watch?v={item['id']}",
@@ -89,6 +104,14 @@ if channel_name:
                 st.markdown(f"#### [{row['Title']}]({row['Link']})")
                 st.write(f"👁️ 조회수: {row['Views']:,}회 | ❤️ 좋아요: {row['Likes']:,}개 | 💬 댓글: {row['Comments']:,}개")
                 st.write(f"📅 업로드일: {row['Published At'][:10]}")
-                with st.expander("▶️ 여기서 바로 보기"):
-                    st.video(row['Link'])
+                
+                # expander를 열었을 때 yt-dlp로 주소를 파싱해서 자체 플레이어로 재생
+                with st.expander("▶️ 여기서 자체 플레이어로 바로 보기"):
+                    with st.spinner("영상을 추출하는 중..."):
+                        raw_video_url = get_raw_video_url(row['Link'])
+                    
+                    if raw_video_url:
+                        st.video(raw_video_url)
+                    else:
+                        st.error("영상을 추출할 수 없습니다. (저작권 또는 제한된 영상)")
                 st.write("---")
