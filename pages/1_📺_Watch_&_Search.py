@@ -3,17 +3,13 @@ from googleapiclient.discovery import build
 
 st.set_page_config(page_title="Search & Watch", page_icon="📺", layout="wide")
 
-# API 키 불러오기
-try:
-    api_key = st.secrets["YOUTUBE_API_KEY"]
-except KeyError:
-    st.error("⚠️ .streamlit/secrets.toml 파일에 'YOUTUBE_API_KEY'를 설정해주세요.")
-    st.stop()
-
+# 기존의 try-except 구문을 지우고 아래처럼 심플하게 변경하세요.
+# Streamlit Cloud 대시보드에 등록한 시크릿 키를 직접 호출합니다.
+api_key = st.secrets["YOUTUBE_API_KEY"]
 youtube = build('youtube', 'v3', developerKey=api_key)
 
 st.title("📺 영상 검색 및 시청")
-
+# ... (이하 기존 코드 동일)
 search_query = st.text_input("검색어를 입력하세요:", placeholder="예: 플레이리스트, 테크 리뷰 등")
 
 if search_query:
