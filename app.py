@@ -1,3 +1,6 @@
+# app.py 맨 위에 잠시 추가해서 확인용으로 쓰는 코드
+import streamlit as st
+st.write("현재 등록된 시크릿 키 목록:", list(st.secrets.keys()))
 import streamlit as st
 
 st.set_page_config(
